@@ -1,10 +1,237 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>My Website</title>
-  </head>
-  <body>
-    <h1>Hello 👋</h1>
-    <p>I made my site!</p>
-  </body>
+<head>
+  <title>Cookie Clicker GUI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #fff7ed, #fde68a);
+      color: #5a3e2b;
+      overflow: hidden;
+    }
+
+    .gui {
+      display: grid;
+      grid-template-areas:
+        "top top top"
+        "left center right"
+        "bottom bottom bottom";
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: 60px 1fr 80px;
+      height: 100vh;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .topbar, .bottombar, .left, .right, .center {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 10px;
+    }
+
+    .topbar { grid-area: top; display:flex; justify-content:space-between; align-items:center; }
+    .left { grid-area: left; }
+    .right { grid-area: right; }
+    .center { grid-area: center; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+    .bottombar { grid-area: bottom; display:flex; justify-content:center; align-items:center; gap:10px; }
+
+    .cookie {
+      width: 180px;
+      height: 180px;
+      background-image: url("https://cdn-icons-png.flaticon.com/512/1047/1047711.png");
+      background-size: cover;
+      cursor: pointer;
+      transition: transform 0.1s;
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
+    }
+
+    .cookie:active { transform: scale(0.85); }
+
+    .btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border: none;
+      border-radius: 12px;
+      background: #fde68a;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn:hover { background: #fcd34d; }
+
+    .stats { font-size: 14px; }
+
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      width: 320px;
+      position: relative;
+    }
+
+    .close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .particle {
+      position: absolute;
+      font-size: 20px;
+      pointer-events: none;
+      animation: fly 0.8s ease-out forwards;
+    }
+
+    @keyframes fly {
+      to {
+        transform: translate(var(--x), var(--y));
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="gui">
+
+  <div class="topbar">
+    <div>🍪 Cookie Clicker GUI</div>
+    <button class="btn" onclick="openUpdateLog()">Update Log</button>
+  </div>
+
+  <div class="left">
+    <h3>Upgrades</h3>
+    <button class="btn" onclick="buyCursor()">Cursor (+1/sec) - <span id="cursorCost">10</span></button>
+    <button class="btn" onclick="buyGrandma()">Grandma (+5/sec) - <span id="grandmaCost">25</span></button>
+  </div>
+
+  <div class="center">
+    <div id="count" style="font-size:28px; margin-bottom:20px;">0 cookies</div>
+    <div class="cookie" onclick="clickCookie(event)"></div>
+  </div>
+
+  <div class="right stats">
+    <h3>Stats</h3>
+    <p>Per Click: <span id="perClick">1</span></p>
+    <p>Per Second: <span id="perSecond">0</span></p>
+  </div>
+
+  <div class="bottombar">
+    <input id="codeInput" placeholder="Redeem code...">
+    <button class="btn" onclick="redeemCode()">Redeem</button>
+  </div>
+
+</div>
+
+<!-- STARTUP UPDATE LOG GUI -->
+<div class="modal" id="updateLog" style="display:flex;">
+  <div class="modal-content">
+    <span class="close" onclick="closeUpdateLog()">X</span>
+    <h3>Update Log - Update 1.0.1.2</h3>
+    <p>Release time!</p>
+    <p>- Cookie clicker</p>
+    <p>- Upgrades & Stats</p>
+    <p>- More soon..</p>
+  </div>
+</div>
+
+<script>
+  let cookies = Number(localStorage.getItem("cookies")) || 0;
+  let perClick = Number(localStorage.getItem("perClick")) || 1;
+  let perSecond = Number(localStorage.getItem("perSecond")) || 0;
+
+  let cursorCost = Number(localStorage.getItem("cursorCost")) || 10;
+  let grandmaCost = Number(localStorage.getItem("grandmaCost")) || 25;
+
+  function saveGame() {
+    localStorage.setItem("cookies", cookies);
+    localStorage.setItem("perClick", perClick);
+    localStorage.setItem("perSecond", perSecond);
+    localStorage.setItem("cursorCost", cursorCost);
+    localStorage.setItem("grandmaCost", grandmaCost);
+  }
+
+  function updateUI() {
+    document.getElementById("count").innerText = Math.floor(cookies) + " cookies";
+    document.getElementById("cursorCost").innerText = cursorCost;
+    document.getElementById("grandmaCost").innerText = grandmaCost;
+    document.getElementById("perClick").innerText = perClick;
+    document.getElementById("perSecond").innerText = perSecond;
+    saveGame();
+  }
+
+  function clickCookie(e) {
+    cookies += perClick;
+    updateUI();
+  }
+
+  function buyCursor() {
+    if (cookies >= cursorCost) {
+      cookies -= cursorCost;
+      perSecond += 1;
+      cursorCost = Math.floor(cursorCost * 1.3);
+      updateUI();
+    }
+  }
+
+  function buyGrandma() {
+    if (cookies >= grandmaCost) {
+      cookies -= grandmaCost;
+      perSecond += 5;
+      grandmaCost = Math.floor(grandmaCost * 1.4);
+      updateUI();
+    }
+  }
+
+  setInterval(() => {
+    cookies += perSecond;
+    updateUI();
+  }, 1000);
+
+  function openUpdateLog() {
+    document.getElementById("updateLog").style.display = "flex";
+  }
+
+  function closeUpdateLog() {
+    document.getElementById("updateLog").style.display = "none";
+  }
+
+  function redeemCode() {
+    let code = document.getElementById("codeInput").value;
+
+    if (code === "COOKIE100") cookies += 100;
+    else if (code === "BOOST") perSecond += 10;
+    else alert("Invalid code!");
+
+    updateUI();
+  }
+
+  updateUI();
+</script>
+
+</body>
 </html>
