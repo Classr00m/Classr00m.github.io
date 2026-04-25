@@ -2,82 +2,113 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Audio Splitter</title>
+<title>Atmos Splitter Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
 <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
 
 <style>
-body {
+:root{
+  --bg1:#0a0614;
+  --bg2:#1a0f2e;
+  --purple:#a855f7;
+  --glow:rgba(168,85,247,.45);
+}
+
+body{
   margin:0;
-  height:100vh;
-  background: radial-gradient(circle at top, #1a0f2e, #0a0614);
-  color:white;
+  min-height:100vh;
   font-family:Segoe UI;
+  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
+  color:#fff;
   display:flex;
   flex-direction:column;
   align-items:center;
 }
 
-h1 {
+/* HEADER */
+h1{
   margin-top:40px;
-  color:#c084fc;
-  text-shadow:0 0 15px rgba(192,132,252,.5);
+  font-size:32px;
+  color:#d8b4fe;
+  text-shadow:0 0 18px var(--glow);
 }
 
-.upload {
-  margin-top:20px;
-  width:320px;
-  padding:30px;
-  border-radius:16px;
-  border:2px dashed #a855f7;
+/* UPLOAD */
+.upload{
+  margin-top:25px;
+  width:340px;
+  padding:35px;
+  border-radius:18px;
+  border:2px dashed var(--purple);
+  background:rgba(255,255,255,0.03);
   text-align:center;
   cursor:pointer;
-  background:rgba(255,255,255,0.03);
+  transition:.2s;
+  backdrop-filter:blur(10px);
 }
 
-.upload:hover {
-  box-shadow:0 0 20px rgba(168,85,247,0.4);
+.upload:hover{
+  box-shadow:0 0 25px var(--glow);
+  transform:scale(1.02);
 }
 
-button {
-  margin-top:10px;
-  padding:12px 20px;
+#fileInput{
+  display:none;
+}
+
+/* BUTTONS */
+button{
+  margin-top:12px;
+  padding:12px 22px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:linear-gradient(135deg,#a855f7,#7c3aed);
   color:white;
+  font-weight:600;
   cursor:pointer;
+  box-shadow:0 0 18px var(--glow);
+  transition:.2s;
 }
 
-button:hover {
-  transform:scale(1.05);
+button:hover{
+  transform:translateY(-2px);
 }
 
-#status {
-  margin-top:10px;
+/* STATUS */
+#status{
+  margin-top:12px;
   color:#bbb;
+  font-size:14px;
 }
 
-#tracks {
-  margin-top:25px;
-  width:90%;
-  max-width:1100px;
+/* TRACKS */
+#tracks{
+  width:92%;
+  max-width:1200px;
+  margin-top:30px;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:15px;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:16px;
 }
 
-.card {
-  background:rgba(255,255,255,0.05);
-  padding:15px;
-  border-radius:14px;
+.card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(168,85,247,.25);
+  border-radius:16px;
+  padding:14px;
   text-align:center;
-  border:1px solid rgba(168,85,247,0.2);
+  box-shadow:0 0 15px rgba(168,85,247,.15);
+  transition:.2s;
 }
 
-audio {
+.card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 0 25px rgba(168,85,247,.35);
+}
+
+audio{
   width:100%;
   margin:10px 0;
 }
@@ -86,16 +117,16 @@ audio {
 
 <body>
 
-<h1>💜 Audio Splitter</h1>
+<h1>💜 Atmos Splitter Pro</h1>
 
-<div class="upload">
-  <input type="file" id="fileInput" hidden>
-  <label for="fileInput" style="cursor:pointer;color:#c084fc;font-weight:bold;">
-    Click to Upload File
-  </label>
+<div class="upload" id="uploadBox">
+  Click or Drop Audio File
 </div>
 
+<input type="file" id="fileInput" accept="audio/*">
+
 <button id="splitBtn">Split Audio</button>
+<button id="zipBtn">Download All</button>
 
 <div id="status">Idle</div>
 
@@ -103,36 +134,43 @@ audio {
 
 <script type="module">
 import { createFFmpeg, fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js";
+import JSZip from "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm";
 
 const ffmpeg = createFFmpeg({ log:true });
 
 let file = null;
+let outputs = [];
 
-/* ---------------- UPLOAD ---------------- */
+/* ---------------- SAFE UPLOAD SYSTEM ---------------- */
+const box = document.getElementById("uploadBox");
 const input = document.getElementById("fileInput");
 const status = document.getElementById("status");
+
+box.addEventListener("click", () => input.click());
 
 input.addEventListener("change", (e) => {
   file = e.target.files[0];
   status.textContent = file ? "Loaded: " + file.name : "No file";
 });
 
+box.addEventListener("dragover", e => e.preventDefault());
+
+box.addEventListener("drop", e => {
+  e.preventDefault();
+  file = e.dataTransfer.files[0];
+  status.textContent = file.name;
+});
+
 /* ---------------- SPLIT ---------------- */
 document.getElementById("splitBtn").onclick = async () => {
-
-  if (!file) {
-    alert("Upload a file first");
-    return;
-  }
+  if (!file) return alert("Upload a file first");
 
   try {
     status.textContent = "Loading engine...";
 
-    if (!ffmpeg.isLoaded()) {
-      await ffmpeg.load();
-    }
+    if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-    status.textContent = "Processing...";
+    status.textContent = "Processing audio...";
 
     ffmpeg.FS("writeFile", "input.m4a", await fetchFile(file));
 
@@ -149,18 +187,20 @@ document.getElementById("splitBtn").onclick = async () => {
 
     status.textContent = "Done ✔";
 
+    const list = ["L.wav","R.wav","C.wav","LFE.wav","LS.wav","RS.wav"];
     const tracks = document.getElementById("tracks");
     tracks.innerHTML = "";
+    outputs = [];
 
-    const files = ["L.wav","R.wav","C.wav","LFE.wav","LS.wav","RS.wav"];
-
-    files.forEach(name => {
-      const data = ffmpeg.FS("readFile", name);
-      const blob = new Blob([data.buffer], {type:"audio/wav"});
+    list.forEach(name=>{
+      const data = ffmpeg.FS("readFile",name);
+      const blob = new Blob([data.buffer],{type:"audio/wav"});
       const url = URL.createObjectURL(blob);
 
+      outputs.push({name,blob});
+
       const card = document.createElement("div");
-      card.className = "card";
+      card.className="card";
 
       card.innerHTML = `
         <h3>${name}</h3>
@@ -173,10 +213,24 @@ document.getElementById("splitBtn").onclick = async () => {
       tracks.appendChild(card);
     });
 
-  } catch (err) {
+  } catch(err){
     console.error(err);
-    status.textContent = "Error: " + err.message;
+    status.textContent = "ERROR: " + err.message;
   }
+};
+
+/* ---------------- ZIP ---------------- */
+document.getElementById("zipBtn").onclick = async () => {
+  if (!outputs.length) return alert("No files yet");
+
+  const zip = new JSZip();
+  outputs.forEach(f => zip.file(f.name,f.blob));
+
+  const blob = await zip.generateAsync({type:"blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "tracks.zip";
+  a.click();
 };
 </script>
 
