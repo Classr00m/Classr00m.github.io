@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Atmos Splitter</title>
+<title>Audio Splitter</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Fix for FFmpeg -->
 <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
 <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
 
@@ -14,7 +13,7 @@ body {
   margin:0;
   height:100vh;
   background: radial-gradient(circle at top, #1a0f2e, #0a0614);
-  color:#eee;
+  color:white;
   font-family:Segoe UI;
   display:flex;
   flex-direction:column;
@@ -22,220 +21,162 @@ body {
 }
 
 h1 {
-  margin-top:30px;
+  margin-top:40px;
   color:#c084fc;
-  text-shadow:0 0 15px rgba(192,132,252,.6);
+  text-shadow:0 0 15px rgba(192,132,252,.5);
 }
 
 .upload {
   margin-top:20px;
+  width:320px;
   padding:30px;
-  width:300px;
-  border:2px dashed #7c3aed;
-  border-radius:15px;
-  cursor:pointer;
+  border-radius:16px;
+  border:2px dashed #a855f7;
   text-align:center;
-  transition:0.2s;
+  cursor:pointer;
+  background:rgba(255,255,255,0.03);
 }
 
 .upload:hover {
-  background:rgba(255,255,255,0.05);
+  box-shadow:0 0 20px rgba(168,85,247,0.4);
 }
 
 button {
   margin-top:10px;
-  padding:10px 20px;
+  padding:12px 20px;
   border:none;
   border-radius:10px;
   background:linear-gradient(135deg,#a855f7,#7c3aed);
   color:white;
   cursor:pointer;
-  box-shadow:0 0 15px rgba(168,85,247,.6);
-  transition:0.2s;
 }
 
 button:hover {
-  transform:translateY(-2px);
-  box-shadow:0 0 25px rgba(168,85,247,.9);
-}
-
-#progress {
-  width:300px;
-  height:10px;
-  background:#222;
-  margin-top:10px;
-  border-radius:10px;
-  overflow:hidden;
-}
-
-#bar {
-  height:100%;
-  width:0%;
-  background:#a855f7;
-}
-
-#tracks {
-  width:90%;
-  max-width:1200px;
-  margin-top:30px;
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-}
-
-.card {
-  background:rgba(255,255,255,0.05);
-  padding:15px;
-  border-radius:15px;
-  text-align:center;
-  box-shadow:0 0 15px rgba(168,85,247,.2);
-  transition:0.2s;
-}
-
-.card:hover {
-  transform:translateY(-5px);
-  box-shadow:0 0 25px rgba(168,85,247,.4);
-}
-
-.card h3 {
-  color:#d8b4fe;
-}
-
-audio {
-  width:100%;
-  margin:10px 0;
+  transform:scale(1.05);
 }
 
 #status {
   margin-top:10px;
   color:#bbb;
 }
+
+#tracks {
+  margin-top:25px;
+  width:90%;
+  max-width:1100px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
+}
+
+.card {
+  background:rgba(255,255,255,0.05);
+  padding:15px;
+  border-radius:14px;
+  text-align:center;
+  border:1px solid rgba(168,85,247,0.2);
+}
+
+audio {
+  width:100%;
+  margin:10px 0;
+}
 </style>
 </head>
 
 <body>
 
-<h1>💜 Atmos Splitter</h1>
+<h1>💜 Audio Splitter</h1>
 
-<div class="upload" id="drop">
-  Click or Drop File
+<div class="upload">
   <input type="file" id="fileInput" hidden>
+  <label for="fileInput" style="cursor:pointer;color:#c084fc;font-weight:bold;">
+    Click to Upload File
+  </label>
 </div>
 
-<button onclick="processFile()">Split Audio</button>
-<button onclick="downloadZip()">Download All</button>
+<button id="splitBtn">Split Audio</button>
 
-<div id="progress"><div id="bar"></div></div>
 <div id="status">Idle</div>
 
 <div id="tracks"></div>
 
 <script type="module">
 import { createFFmpeg, fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js";
-import JSZip from "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm";
 
 const ffmpeg = createFFmpeg({ log:true });
-let outputFiles = [];
 
-const drop = document.getElementById("drop");
+let file = null;
+
+/* ---------------- UPLOAD ---------------- */
 const input = document.getElementById("fileInput");
+const status = document.getElementById("status");
 
-drop.onclick = () => input.click();
+input.addEventListener("change", (e) => {
+  file = e.target.files[0];
+  status.textContent = file ? "Loaded: " + file.name : "No file";
+});
 
-drop.ondragover = e => e.preventDefault();
+/* ---------------- SPLIT ---------------- */
+document.getElementById("splitBtn").onclick = async () => {
 
-drop.ondrop = e => {
-  e.preventDefault();
-  input.files = e.dataTransfer.files;
-};
-
-/* 🔥 FIXED FUNCTION */
-window.processFile = async () => {
-  const file = input.files[0];
-  const status = document.getElementById("status");
-  const bar = document.getElementById("bar");
-  const tracks = document.getElementById("tracks");
-
-  if (!file) return alert("Upload a file");
+  if (!file) {
+    alert("Upload a file first");
+    return;
+  }
 
   try {
-    status.innerText = "Loading engine...";
-    bar.style.width = "10%";
+    status.textContent = "Loading engine...";
 
-    if (!ffmpeg.isLoaded()) await ffmpeg.load();
+    if (!ffmpeg.isLoaded()) {
+      await ffmpeg.load();
+    }
 
-    status.innerText = "Preparing file...";
-    bar.style.width = "30%";
+    status.textContent = "Processing...";
 
-    ffmpeg.FS("writeFile","input.m4a",await fetchFile(file));
-
-    status.innerText = "Splitting channels...";
-    bar.style.width = "60%";
+    ffmpeg.FS("writeFile", "input.m4a", await fetchFile(file));
 
     await ffmpeg.run(
       "-i","input.m4a",
       "-filter_complex","channelsplit=channel_layout=5.1[L][R][C][LFE][Ls][Rs]",
-      "-map","[L]","left.wav",
-      "-map","[R]","right.wav",
-      "-map","[C]","center.wav",
-      "-map","[LFE]","lfe.wav",
-      "-map","[Ls]","left_surround.wav",
-      "-map","[Rs]","right_surround.wav"
+      "-map","[L]","L.wav",
+      "-map","[R]","R.wav",
+      "-map","[C]","C.wav",
+      "-map","[LFE]","LFE.wav",
+      "-map","[Ls]","LS.wav",
+      "-map","[Rs]","RS.wav"
     );
 
-    bar.style.width = "100%";
-    status.innerText = "Done ✨";
+    status.textContent = "Done ✔";
 
-    const names = [
-      "left.wav","right.wav","center.wav",
-      "lfe.wav","left_surround.wav","right_surround.wav"
-    ];
-
+    const tracks = document.getElementById("tracks");
     tracks.innerHTML = "";
-    outputFiles = [];
 
-    names.forEach(n=>{
-      const data = ffmpeg.FS("readFile",n);
-      const blob = new Blob([data.buffer],{type:"audio/wav"});
+    const files = ["L.wav","R.wav","C.wav","LFE.wav","LS.wav","RS.wav"];
+
+    files.forEach(name => {
+      const data = ffmpeg.FS("readFile", name);
+      const blob = new Blob([data.buffer], {type:"audio/wav"});
       const url = URL.createObjectURL(blob);
 
-      outputFiles.push({name:n,blob});
+      const card = document.createElement("div");
+      card.className = "card";
 
-      const div = document.createElement("div");
-      div.className = "card";
-
-      div.innerHTML = `
-        <h3>${n}</h3>
+      card.innerHTML = `
+        <h3>${name}</h3>
         <audio controls src="${url}"></audio>
-        <a href="${url}" download="${n}">
+        <a href="${url}" download="${name}">
           <button>Download</button>
         </a>
       `;
 
-      tracks.appendChild(div);
+      tracks.appendChild(card);
     });
 
-  } catch (e) {
-    console.error(e);
-    status.innerText = "ERROR: " + e.message;
+  } catch (err) {
+    console.error(err);
+    status.textContent = "Error: " + err.message;
   }
-};
-
-/* 🔥 ZIP DOWNLOAD */
-window.downloadZip = async () => {
-  if (!outputFiles.length) return alert("No files yet");
-
-  const zip = new JSZip();
-
-  outputFiles.forEach(f=>{
-    zip.file(f.name,f.blob);
-  });
-
-  const blob = await zip.generateAsync({type:"blob"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "tracks.zip";
-  a.click();
 };
 </script>
 
