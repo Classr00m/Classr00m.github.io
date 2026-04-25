@@ -1,68 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Atmos Splitter</title>
+<meta charset="UTF-8">
+<title>Atmos Splitter 🔥</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  background: #0f0f0f;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
+
+h1 {
+  color: #ff4d00;
+  text-shadow: 0 0 10px #ff4d00;
+}
+
+button {
+  background: linear-gradient(45deg, #ff4d00, #ff9900);
+  border: none;
+  padding: 12px 20px;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+#tracks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 30px;
+  padding: 20px;
+}
+
+.card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 0 10px rgba(255, 77, 0, 0.3);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+}
+
+.status {
+  margin-top: 15px;
+  color: #aaa;
+}
+</style>
 </head>
+
 <body>
 
-<h2>Upload Dolby Atmos (.m4a)</h2>
-<input type="file" id="fileInput" accept=".m4a" />
-<button onclick="processFile()">Split Channels</button>
+<h1>🔥 Atmos Audio Splitter</h1>
 
-<div id="downloads"></div>
+<input type="file" id="fileInput" accept=".m4a">
+<br>
+<button onclick="processFile()">Split Audio</button>
+
+<p class="status" id="status">Idle</p>
+
+<div id="tracks"></div>
 
 <script type="module">
-import { createFFmpeg, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js';
+import { createFFmpeg, fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js";
 
 const ffmpeg = createFFmpeg({ log: true });
 
-async function processFile() {
-  const fileInput = document.getElementById('fileInput');
-  const file = fileInput.files[0];
-  if (!file) return alert("Upload a file first");
+window.processFile = async () => {
+  const file = document.getElementById("fileInput").files[0];
+  const status = document.getElementById("status");
+  const tracksDiv = document.getElementById("tracks");
 
-  if (!ffmpeg.isLoaded()) {
-    await ffmpeg.load();
+  if (!file) return alert("Upload a file");
+
+  try {
+    status.innerText = "🔥 Loading engine...";
+    if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+    status.innerText = "⚙️ Processing...";
+    ffmpeg.FS("writeFile", "input.m4a", await fetchFile(file));
+
+    await ffmpeg.run(
+      "-i", "input.m4a",
+      "-filter_complex", "channelsplit=channel_layout=5.1[L][R][C][LFE][Ls][Rs]",
+      "-map", "[L]", "left.wav",
+      "-map", "[R]", "right.wav",
+      "-map", "[C]", "center.wav",
+      "-map", "[LFE]", "lfe.wav",
+      "-map", "[Ls]", "left_surround.wav",
+      "-map", "[Rs]", "right_surround.wav"
+    );
+
+    status.innerText = "✅ Done!";
+
+    const files = [
+      {name: "Left", file: "left.wav"},
+      {name: "Right", file: "right.wav"},
+      {name: "Center", file: "center.wav"},
+      {name: "LFE (Bass)", file: "lfe.wav"},
+      {name: "Left Surround", file: "left_surround.wav"},
+      {name: "Right Surround", file: "right_surround.wav"}
+    ];
+
+    tracksDiv.innerHTML = "";
+
+    files.forEach(track => {
+      const data = ffmpeg.FS("readFile", track.file);
+      const url = URL.createObjectURL(new Blob([data.buffer], { type: "audio/wav" }));
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <h3>${track.name}</h3>
+        <audio controls src="${url}"></audio>
+        <br><br>
+        <a href="${url}" download="${track.file}">
+          <button>Download</button>
+        </a>
+      `;
+
+      tracksDiv.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+    status.innerText = "❌ Error: " + err.message;
   }
-
-  ffmpeg.FS('writeFile', 'input.m4a', await fetchFile(file));
-
-  await ffmpeg.run(
-    '-i', 'input.m4a',
-    '-filter_complex', 'channelsplit=channel_layout=5.1[L][R][C][LFE][Ls][Rs]',
-    '-map', '[L]', 'left.wav',
-    '-map', '[R]', 'right.wav',
-    '-map', '[C]', 'center.wav',
-    '-map', '[LFE]', 'lfe.wav',
-    '-map', '[Ls]', 'left_surround.wav',
-    '-map', '[Rs]', 'right_surround.wav'
-  );
-
-  const files = [
-    'left.wav',
-    'right.wav',
-    'center.wav',
-    'lfe.wav',
-    'left_surround.wav',
-    'right_surround.wav'
-  ];
-
-  const downloadsDiv = document.getElementById('downloads');
-  downloadsDiv.innerHTML = "<h3>Download your files:</h3>";
-
-  files.forEach(name => {
-    const data = ffmpeg.FS('readFile', name);
-    const url = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/wav' }));
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.textContent = "Download " + name;
-
-    downloadsDiv.appendChild(a);
-    downloadsDiv.appendChild(document.createElement('br'));
-  });
-}
+};
 </script>
 
 </body>
