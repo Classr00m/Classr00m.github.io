@@ -1,238 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Atmos Splitter Pro</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
-<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+const songs = [
+  { title: "Right Back", artist: "Karlee Girl", src: "songs/right-back.flac" },
+  { title: "Summer Glow", artist: "Karlee Girl", src: "songs/summer-glow.flac" },
+  { title: "Blue Skies", artist: "Karlee Girl", src: "songs/blue-skies.flac" },
+  { title: "Golden Hour", artist: "Karlee Girl", src: "songs/golden-hour.flac" },
+];
 
-<style>
-:root{
-  --bg1:#0a0614;
-  --bg2:#1a0f2e;
-  --purple:#a855f7;
-  --glow:rgba(168,85,247,.45);
+export default function MusicPlayer() {
+  const [current, setCurrent] = useState(null);
+
+  const playSong = (index) => {
+    setCurrent(index);
+    const audio = document.getElementById("audio");
+    audio.src = songs[index].src;
+    audio.play();
+  };
+
+  const nextSong = () => {
+    if (current === null) return;
+    const next = (current + 1) % songs.length;
+    playSong(next);
+  };
+
+  const activeSong = current !== null ? songs[current] : null;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-yellow-50 to-white text-slate-800 flex flex-col items-center p-6">
+      <motion.h1 className="text-3xl font-bold text-sky-700 mb-4">
+        Karlee Girl
+      </motion.h1>
+
+      <audio id="audio" onEnded={nextSong} />
+
+      {/* BANNER PLAYER (Kodi-style) */}
+      <AnimatePresence>
+        {activeSong && (
+          <motion.div
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            className="w-full max-w-4xl bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg overflow-hidden mb-6 border border-sky-100"
+          >
+            <div className="h-56 bg-gradient-to-br from-sky-200 via-yellow-100 to-white flex items-end p-6">
+              <div>
+                <h2 className="text-2xl font-bold text-sky-800">
+                  {activeSong.title}
+                </h2>
+                <p className="text-slate-600">{activeSong.artist}</p>
+              </div>
+            </div>
+
+            <div className="p-4 flex justify-center">
+              <button
+                onClick={() => document.getElementById("audio").play()}
+                className="px-4 py-2 rounded-xl bg-sky-200 hover:bg-sky-300 transition"
+              >
+                ▶ Play / Resume
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* GRID */}
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {songs.map((song, i) => (
+          <motion.div
+            key={i}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => playSong(i)}
+            className={`cursor-pointer rounded-2xl overflow-hidden bg-white/70 backdrop-blur-xl border border-sky-100 shadow-md transition-all duration-300 ${
+              current === i ? "ring-2 ring-yellow-200" : ""
+            }`}
+          >
+            <div className="h-40 bg-gradient-to-br from-sky-200 via-yellow-100 to-white" />
+            <div className="p-4 text-center">
+              <div className="font-semibold text-sky-800">
+                {song.title}
+              </div>
+              <div className="text-sm text-slate-500">
+                {song.artist}
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="mt-6 text-xs text-slate-400">
+        tap a song → expands into player banner • auto loop enabled
+      </div>
+    </div>
+  );
 }
-
-body{
-  margin:0;
-  min-height:100vh;
-  font-family:Segoe UI;
-  background:radial-gradient(circle at top,var(--bg2),var(--bg1));
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-/* HEADER */
-h1{
-  margin-top:40px;
-  font-size:32px;
-  color:#d8b4fe;
-  text-shadow:0 0 18px var(--glow);
-}
-
-/* UPLOAD */
-.upload{
-  margin-top:25px;
-  width:340px;
-  padding:35px;
-  border-radius:18px;
-  border:2px dashed var(--purple);
-  background:rgba(255,255,255,0.03);
-  text-align:center;
-  cursor:pointer;
-  transition:.2s;
-  backdrop-filter:blur(10px);
-}
-
-.upload:hover{
-  box-shadow:0 0 25px var(--glow);
-  transform:scale(1.02);
-}
-
-#fileInput{
-  display:none;
-}
-
-/* BUTTONS */
-button{
-  margin-top:12px;
-  padding:12px 22px;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(135deg,#a855f7,#7c3aed);
-  color:white;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:0 0 18px var(--glow);
-  transition:.2s;
-}
-
-button:hover{
-  transform:translateY(-2px);
-}
-
-/* STATUS */
-#status{
-  margin-top:12px;
-  color:#bbb;
-  font-size:14px;
-}
-
-/* TRACKS */
-#tracks{
-  width:92%;
-  max-width:1200px;
-  margin-top:30px;
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-  gap:16px;
-}
-
-.card{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(168,85,247,.25);
-  border-radius:16px;
-  padding:14px;
-  text-align:center;
-  box-shadow:0 0 15px rgba(168,85,247,.15);
-  transition:.2s;
-}
-
-.card:hover{
-  transform:translateY(-5px);
-  box-shadow:0 0 25px rgba(168,85,247,.35);
-}
-
-audio{
-  width:100%;
-  margin:10px 0;
-}
-</style>
-</head>
-
-<body>
-
-<h1>💜 Atmos Splitter Pro</h1>
-
-<div class="upload" id="uploadBox">
-  Click or Drop Audio File
-</div>
-
-<input type="file" id="fileInput" accept="audio/*">
-
-<button id="splitBtn">Split Audio</button>
-<button id="zipBtn">Download All</button>
-
-<div id="status">Idle</div>
-
-<div id="tracks"></div>
-
-<script type="module">
-import { createFFmpeg, fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js";
-import JSZip from "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm";
-
-const ffmpeg = createFFmpeg({ log:true });
-
-let file = null;
-let outputs = [];
-
-/* ---------------- SAFE UPLOAD SYSTEM ---------------- */
-const box = document.getElementById("uploadBox");
-const input = document.getElementById("fileInput");
-const status = document.getElementById("status");
-
-box.addEventListener("click", () => input.click());
-
-input.addEventListener("change", (e) => {
-  file = e.target.files[0];
-  status.textContent = file ? "Loaded: " + file.name : "No file";
-});
-
-box.addEventListener("dragover", e => e.preventDefault());
-
-box.addEventListener("drop", e => {
-  e.preventDefault();
-  file = e.dataTransfer.files[0];
-  status.textContent = file.name;
-});
-
-/* ---------------- SPLIT ---------------- */
-document.getElementById("splitBtn").onclick = async () => {
-  if (!file) return alert("Upload a file first");
-
-  try {
-    status.textContent = "Loading engine...";
-
-    if (!ffmpeg.isLoaded()) await ffmpeg.load();
-
-    status.textContent = "Processing audio...";
-
-    ffmpeg.FS("writeFile", "input.m4a", await fetchFile(file));
-
-    await ffmpeg.run(
-      "-i","input.m4a",
-      "-filter_complex","channelsplit=channel_layout=5.1[L][R][C][LFE][Ls][Rs]",
-      "-map","[L]","L.wav",
-      "-map","[R]","R.wav",
-      "-map","[C]","C.wav",
-      "-map","[LFE]","LFE.wav",
-      "-map","[Ls]","LS.wav",
-      "-map","[Rs]","RS.wav"
-    );
-
-    status.textContent = "Done ✔";
-
-    const list = ["L.wav","R.wav","C.wav","LFE.wav","LS.wav","RS.wav"];
-    const tracks = document.getElementById("tracks");
-    tracks.innerHTML = "";
-    outputs = [];
-
-    list.forEach(name=>{
-      const data = ffmpeg.FS("readFile",name);
-      const blob = new Blob([data.buffer],{type:"audio/wav"});
-      const url = URL.createObjectURL(blob);
-
-      outputs.push({name,blob});
-
-      const card = document.createElement("div");
-      card.className="card";
-
-      card.innerHTML = `
-        <h3>${name}</h3>
-        <audio controls src="${url}"></audio>
-        <a href="${url}" download="${name}">
-          <button>Download</button>
-        </a>
-      `;
-
-      tracks.appendChild(card);
-    });
-
-  } catch(err){
-    console.error(err);
-    status.textContent = "ERROR: " + err.message;
-  }
-};
-
-/* ---------------- ZIP ---------------- */
-document.getElementById("zipBtn").onclick = async () => {
-  if (!outputs.length) return alert("No files yet");
-
-  const zip = new JSZip();
-  outputs.forEach(f => zip.file(f.name,f.blob));
-
-  const blob = await zip.generateAsync({type:"blob"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "tracks.zip";
-  a.click();
-};
-</script>
-
-</body>
-</html>
