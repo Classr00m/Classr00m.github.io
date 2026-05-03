@@ -38,12 +38,18 @@
     }
 
     .locked {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
     }
 
     .player {
       margin-top: 30px;
+    }
+
+    #error {
+      margin-top: 10px;
+      color: red;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -52,6 +58,7 @@
 
   <h1>Karlee Girl 🎧</h1>
   <div id="nowPlaying">Nothing playing</div>
+  <div id="error"></div>
 
   <!-- SONG LIST -->
   <div class="song" onclick="playSong(0)">Right Back</div>
@@ -64,11 +71,14 @@
   </div>
 
   <script>
-    // 🔥 Replace with your REAL Google Drive direct links
+    const audio = document.getElementById("audio");
+    const nowPlaying = document.getElementById("nowPlaying");
+    const errorBox = document.getElementById("error");
+
     const songs = [
       {
         title: "Right Back",
-        url: "https://drive.google.com/uc?export=download&id=1J6p-xS4_qwuVsesVdQ9kIQZgcwXUQhp-",
+        url: "https://www.dropbox.com/scl/fi/qa9n3pe7zd0z6tpfzfvwf/right-back.flac.flac?rlkey=znr1abvuvd584osv0p17swxjt&st=efj98trd&raw=1",
         unlocked: true
       },
       {
@@ -89,25 +99,43 @@
     ];
 
     let current = 0;
-    const audio = document.getElementById("audio");
-    const nowPlaying = document.getElementById("nowPlaying");
 
     function playSong(index) {
       const song = songs[index];
 
+      errorBox.textContent = "";
+
       if (!song.unlocked) {
-        alert("This track isn't released yet 👀");
+        errorBox.textContent = "This track is still locked 🔒";
+        return;
+      }
+
+      if (!song.url) {
+        errorBox.textContent = "No URL set for this track";
         return;
       }
 
       current = index;
+
       audio.src = song.url;
-      audio.play();
+      audio.load();
+
+      const playPromise = audio.play();
+
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          errorBox.textContent = "Playback failed (format or link issue)";
+          console.log(err);
+        });
+      }
 
       nowPlaying.textContent = "Now Playing: " + song.title;
     }
 
-    // Auto play next track (only unlocked ones)
+    audio.addEventListener("error", () => {
+      errorBox.textContent = "Audio failed to load (check file format or link)";
+    });
+
     audio.addEventListener("ended", () => {
       let next = current;
 
@@ -115,7 +143,9 @@
         next = (next + 1) % songs.length;
       } while (!songs[next].unlocked && next !== current);
 
-      playSong(next);
+      if (songs[next].unlocked) {
+        playSong(next);
+      }
     });
   </script>
 
