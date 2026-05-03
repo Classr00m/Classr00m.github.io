@@ -5,7 +5,6 @@
 <title>Karlee Girl</title>
 
 <style>
-/* 🌈 Animated Summer Background */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -22,16 +21,12 @@ body {
   100% {background-position: 0% 50%;}
 }
 
-/* APP */
 .app {
   height: 100vh;
-  display: flex;
-  flex-direction: column;
   padding: 20px;
   box-sizing: border-box;
 }
 
-/* TOP BAR */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -41,45 +36,30 @@ body {
 h1 {
   margin: 0;
   font-size: 22px;
-  color: #222;
 }
 
-/* PREMIERE BUTTON */
-.premiereBtn {
+button {
   padding: 10px 14px;
   border-radius: 20px;
   border: none;
   cursor: pointer;
   background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(10px);
-  font-weight: bold;
-}
-
-.premiereBtn:hover {
-  transform: scale(1.05);
 }
 
 /* GRID */
 .grid {
-  flex: 1;
+  margin-top: 15px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
-  margin-top: 15px;
 }
 
-/* CARD */
 .card {
   border-radius: 18px;
   overflow: hidden;
-  position: relative;
   cursor: pointer;
+  position: relative;
   box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-  transition: 0.2s;
-}
-
-.card:hover {
-  transform: scale(1.04);
 }
 
 .card img {
@@ -93,67 +73,104 @@ h1 {
   bottom: 0;
   width: 100%;
   padding: 10px;
-  font-size: 13px;
   color: white;
-  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  font-size: 13px;
 }
 
-.locked {
-  filter: grayscale(1);
-  opacity: 0.5;
-}
-
-/* PLAYER BANNER */
+/* PLAYER */
 .banner {
   position: fixed;
-  bottom: -240px;
+  bottom: -220px;
   left: 0;
   width: 100%;
-  background: rgba(20,20,20,0.9);
+  background: rgba(20,20,20,0.92);
   color: white;
   padding: 15px;
-  transition: 0.4s ease;
+  transition: 0.4s;
 }
 
 .banner.show {
   bottom: 0;
 }
 
-audio {
-  width: 100%;
-}
-
-.close {
-  font-size: 12px;
-  color: #aaa;
+.closeX {
+  float: right;
   cursor: pointer;
-  margin-top: 6px;
+  color: #aaa;
 }
 
-/* PREMIERE BANNER */
+/* PREMIERE */
 .premiere {
   position: fixed;
-  top: -200px;
-  left: 0;
-  width: 100%;
-  background: rgba(255,255,255,0.9);
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.6);
   backdrop-filter: blur(10px);
-  padding: 20px;
-  text-align: center;
-  transition: 0.4s ease;
 }
 
 .premiere.show {
-  top: 0;
+  display: flex;
 }
 
-.timer {
-  font-size: 26px;
+.cardBox {
+  width: 340px;
+  background: rgba(255,255,255,0.92);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+}
+
+.cover {
+  width: 100%;
+  border-radius: 15px;
+}
+
+.albumName {
   font-weight: bold;
   margin-top: 10px;
 }
 
-#err {
+.timer {
+  font-size: 22px;
+  margin: 8px 0;
+}
+
+.tracklist {
+  text-align: left;
+  font-size: 13px;
+  margin-top: 10px;
+  line-height: 1.6;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.track {
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.empty {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+  font-style: italic;
+}
+
+.closeBtn {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: black;
+  color: white;
+  cursor: pointer;
+}
+
+/* ERROR */
+#error {
   color: red;
   font-size: 13px;
 }
@@ -167,58 +184,68 @@ audio {
   <!-- TOP -->
   <div class="topbar">
     <h1>Karlee Girl 🌞</h1>
-    <button class="premiereBtn" onclick="togglePremiere()">Premiere</button>
+    <button onclick="togglePremiere()">Premiere</button>
   </div>
 
-  <div id="err"></div>
+  <div id="error"></div>
 
   <!-- GRID -->
   <div class="grid">
 
-    <div class="card" onclick="playSong(0)">
+    <div class="card" onclick="playSong()">
       <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2F4d891f486bd08c949af60c5005f038f5.1000x1000x1.png">
       <div class="label">Right Back!</div>
     </div>
 
-    <div class="card locked">
-      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fbdab9337903ecb566265438eea2d0638.1000x1000x1.png">
-      <div class="label">NBDY NBDY</div>
-    </div>
-
-    <div class="card locked">
-      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2F7049d14c4df71c7ca1ff05da2730f59f.1000x1000x1.png">
-      <div class="label">Dancing on My Own X Happier Than Ever</div>
-    </div>
-
-    <div class="card locked">
-      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fd8bcee227347bf02d5925f86e74c6920.1000x1000x1.png">
-      <div class="label">Little Things</div>
-    </div>
-
-    <div class="card locked">
-      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Ff9710030489d3ec08b39a961770f102c.1000x1000x1.png">
-      <div class="label">ANTIFRAGILE (Team B)</div>
-    </div>
-
-    <div class="card locked">
-      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fe60231c9ec6c6c18b18f8b0f429b36b8.1000x1000x1.png">
-      <div class="label">R.I.P. the idea of you</div>
-    </div>
+    <div class="card"><img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fbdab9337903ecb566265438eea2d0638.1000x1000x1.png"><div class="label">NBDY NBDY</div></div>
+    <div class="card"><img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2F7049d14c4df71c7ca1ff05da2730f59f.1000x1000x1.png"><div class="label">Dancing on My Own</div></div>
+    <div class="card"><img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fd8bcee227347bf02d5925f86e74c6920.1000x1000x1.png"><div class="label">Little Things</div></div>
+    <div class="card"><img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Ff9710030489d3ec08b39a961770f102c.1000x1000x1.png"><div class="label">ANTIFRAGILE</div></div>
+    <div class="card"><img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fe60231c9ec6c6c18b18f8b0f429b36b8.1000x1000x1.png"><div class="label">R.I.P.</div></div>
 
   </div>
 </div>
 
 <!-- PLAYER -->
 <div class="banner" id="banner">
-  <div id="now">Nothing playing</div>
+  <span class="closeX" onclick="closePlayer()">✕</span>
+  <div id="now">Now Playing</div>
   <audio id="audio" controls></audio>
-  <div class="close" onclick="closePlayer()">Close</div>
 </div>
 
 <!-- PREMIERE -->
 <div class="premiere" id="premiere">
-  <div>Next Premiere In</div>
-  <div class="timer" id="timer">00:00</div>
+
+  <div class="cardBox">
+
+    <img class="cover"
+    src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2F4d891f486bd08c949af60c5005f038f5.1000x1000x1.png">
+
+    <div class="albumName">Right Back!</div>
+
+    <div class="timer" id="timer">00:00:00</div>
+
+    <div class="tracklist">
+
+      <div class="track">1. Right Back!</div>
+      <div class="track">2. NBDY NBDY</div>
+      <div class="track">3. Dancing on My Own X Happier Than Ever</div>
+      <div class="track">4. Little Things</div>
+      <div class="track">5. ANTIFRAGILE (Team B Version)</div>
+      <div class="track">6. R.I.P. the idea of you</div>
+      <div class="track">7. Perfect Crime</div>
+      <div class="track">8. —</div>
+      <div class="track">9. —</div>
+      <div class="track">10. —</div>
+
+    </div>
+
+    <div class="empty">No Upcoming Album at the moment..</div>
+
+    <div class="closeBtn" onclick="togglePremiere()">Close</div>
+
+  </div>
+
 </div>
 
 <script>
@@ -226,32 +253,18 @@ audio {
 const audio = document.getElementById("audio");
 const banner = document.getElementById("banner");
 const now = document.getElementById("now");
-const err = document.getElementById("err");
+const err = document.getElementById("error");
 const premiere = document.getElementById("premiere");
 const timer = document.getElementById("timer");
 
-const songs = [
-  {
-    title: "Right Back!",
-    url: "https://www.dropbox.com/scl/fi/qa9n3pe7zd0z6tpfzfvwf/right-back.flac.flac?rlkey=znr1abvuvd584osv0p17swxjt&st=efj98trd&raw=1",
-    unlocked: true
-  }
-];
-
-function playSong(i) {
-  const s = songs[i];
+/* PLAY */
+function playSong() {
   err.textContent = "";
 
-  if (!s || !s.unlocked) {
-    err.textContent = "🔒 Not released yet";
-    return;
-  }
-
-  audio.src = s.url;
-  audio.load();
+  audio.src = "https://www.dropbox.com/scl/fi/qa9n3pe7zd0z6tpfzfvwf/right-back.flac.flac?rlkey=znr1abvuvd584osv0p17swxjt&st=efj98trd&raw=1";
   audio.play().catch(() => err.textContent = "Playback failed");
 
-  now.textContent = "Now Playing: " + s.title;
+  now.textContent = "Right Back!";
   banner.classList.add("show");
 }
 
@@ -260,17 +273,14 @@ function closePlayer() {
   audio.pause();
 }
 
-/* PREMIERE SYSTEM (00:00 for now) */
-let showPremiere = false;
-
+/* PREMIERE */
 function togglePremiere() {
-  showPremiere = !showPremiere;
   premiere.classList.toggle("show");
 }
 
-/* TIMER (currently 00:00 placeholder) */
+/* TIMER */
 setInterval(() => {
-  timer.textContent = "00:00";
+  timer.textContent = "00:00:00";
 }, 1000);
 
 </script>
