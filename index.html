@@ -1,97 +1,72 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Karlee Girl Player</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #dbeafe, #fef9c3, white);
+      text-align: center;
+      padding: 40px;
+    }
 
-const songs = [
-  { title: "Right Back", artist: "Karlee Girl", src: "songs/right-back.flac" },
-  { title: "Summer Glow", artist: "Karlee Girl", src: "songs/summer-glow.flac" },
-  { title: "Blue Skies", artist: "Karlee Girl", src: "songs/blue-skies.flac" },
-  { title: "Golden Hour", artist: "Karlee Girl", src: "songs/golden-hour.flac" },
-];
+    .song {
+      background: rgba(255,255,255,0.7);
+      margin: 10px auto;
+      padding: 15px;
+      border-radius: 12px;
+      max-width: 300px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-export default function MusicPlayer() {
-  const [current, setCurrent] = useState(null);
+    .song:hover {
+      transform: scale(1.05);
+    }
 
-  const playSong = (index) => {
-    setCurrent(index);
+    .player {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Karlee Girl 🎧</h1>
+
+  <div class="song" onclick="playSong(0)">Right Back</div>
+  <div class="song" onclick="playSong(1)">Summer Glow</div>
+  <div class="song" onclick="playSong(2)">Blue Skies</div>
+  <div class="song" onclick="playSong(3)">Golden Hour</div>
+
+  <div class="player">
+    <audio id="audio" controls></audio>
+  </div>
+
+  <script>
+    const songs = [
+      "songs/right-back.flac",
+      "songs/summer-glow.flac",
+      "songs/blue-skies.flac",
+      "songs/golden-hour.flac"
+    ];
+
+    let current = 0;
     const audio = document.getElementById("audio");
-    audio.src = songs[index].src;
-    audio.play();
-  };
 
-  const nextSong = () => {
-    if (current === null) return;
-    const next = (current + 1) % songs.length;
-    playSong(next);
-  };
+    function playSong(index) {
+      current = index;
+      audio.src = songs[index];
+      audio.play();
+    }
 
-  const activeSong = current !== null ? songs[current] : null;
+    audio.addEventListener("ended", () => {
+      current = (current + 1) % songs.length;
+      playSong(current);
+    });
+  </script>
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-yellow-50 to-white text-slate-800 flex flex-col items-center p-6">
-      <motion.h1 className="text-3xl font-bold text-sky-700 mb-4">
-        Karlee Girl
-      </motion.h1>
-
-      <audio id="audio" onEnded={nextSong} />
-
-      {/* BANNER PLAYER (Kodi-style) */}
-      <AnimatePresence>
-        {activeSong && (
-          <motion.div
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -30 }}
-            className="w-full max-w-4xl bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg overflow-hidden mb-6 border border-sky-100"
-          >
-            <div className="h-56 bg-gradient-to-br from-sky-200 via-yellow-100 to-white flex items-end p-6">
-              <div>
-                <h2 className="text-2xl font-bold text-sky-800">
-                  {activeSong.title}
-                </h2>
-                <p className="text-slate-600">{activeSong.artist}</p>
-              </div>
-            </div>
-
-            <div className="p-4 flex justify-center">
-              <button
-                onClick={() => document.getElementById("audio").play()}
-                className="px-4 py-2 rounded-xl bg-sky-200 hover:bg-sky-300 transition"
-              >
-                ▶ Play / Resume
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* GRID */}
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {songs.map((song, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => playSong(i)}
-            className={`cursor-pointer rounded-2xl overflow-hidden bg-white/70 backdrop-blur-xl border border-sky-100 shadow-md transition-all duration-300 ${
-              current === i ? "ring-2 ring-yellow-200" : ""
-            }`}
-          >
-            <div className="h-40 bg-gradient-to-br from-sky-200 via-yellow-100 to-white" />
-            <div className="p-4 text-center">
-              <div className="font-semibold text-sky-800">
-                {song.title}
-              </div>
-              <div className="text-sm text-slate-500">
-                {song.artist}
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="mt-6 text-xs text-slate-400">
-        tap a song → expands into player banner • auto loop enabled
-      </div>
-    </div>
-  );
-}
+</body>
+</html>
+```
