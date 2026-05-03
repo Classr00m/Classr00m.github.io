@@ -1,153 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Karlee Girl Player</title>
+<meta charset="UTF-8">
+<title>Karlee Girl</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom right, #dbeafe, #fef9c3, white);
-      text-align: center;
-      padding: 40px;
-    }
+<style>
+/* 🌈 Animated Summer Background */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  background: linear-gradient(-45deg, #ffdee9, #b5fffc, #fff6b7, #c9ffbf);
+  background-size: 400% 400%;
+  animation: gradientMove 12s ease infinite;
+}
 
-    h1 {
-      margin-bottom: 10px;
-    }
+@keyframes gradientMove {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
 
-    #nowPlaying {
-      margin-bottom: 20px;
-      font-size: 14px;
-      color: #444;
-    }
+/* APP */
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
 
-    .song {
-      background: rgba(255,255,255,0.7);
-      margin: 10px auto;
-      padding: 15px;
-      border-radius: 12px;
-      max-width: 300px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+/* TOP BAR */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-    .song:hover {
-      transform: scale(1.05);
-      background: rgba(255,255,255,0.9);
-    }
+h1 {
+  margin: 0;
+  font-size: 22px;
+  color: #222;
+}
 
-    .locked {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
+/* PREMIERE BUTTON */
+.premiereBtn {
+  padding: 10px 14px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(10px);
+  font-weight: bold;
+}
 
-    .player {
-      margin-top: 30px;
-    }
+.premiereBtn:hover {
+  transform: scale(1.05);
+}
 
-    #error {
-      margin-top: 10px;
-      color: red;
-      font-size: 13px;
-    }
-  </style>
+/* GRID */
+.grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 15px;
+}
+
+/* CARD */
+.card {
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.04);
+}
+
+.card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.label {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  color: white;
+  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+}
+
+.locked {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+/* PLAYER BANNER */
+.banner {
+  position: fixed;
+  bottom: -240px;
+  left: 0;
+  width: 100%;
+  background: rgba(20,20,20,0.9);
+  color: white;
+  padding: 15px;
+  transition: 0.4s ease;
+}
+
+.banner.show {
+  bottom: 0;
+}
+
+audio {
+  width: 100%;
+}
+
+.close {
+  font-size: 12px;
+  color: #aaa;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+/* PREMIERE BANNER */
+.premiere {
+  position: fixed;
+  top: -200px;
+  left: 0;
+  width: 100%;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  text-align: center;
+  transition: 0.4s ease;
+}
+
+.premiere.show {
+  top: 0;
+}
+
+.timer {
+  font-size: 26px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+#err {
+  color: red;
+  font-size: 13px;
+}
+</style>
 </head>
 
 <body>
 
-  <h1>Karlee Girl 🎧</h1>
-  <div id="nowPlaying">Nothing playing</div>
-  <div id="error"></div>
+<div class="app">
 
-  <!-- SONG LIST -->
-  <div class="song" onclick="playSong(0)">Right Back</div>
-  <div class="song locked">Soon</div>
-  <div class="song locked">Soon</div>
-  <div class="song locked">Soon</div>
-
-  <div class="player">
-    <audio id="audio" controls></audio>
+  <!-- TOP -->
+  <div class="topbar">
+    <h1>Karlee Girl 🌞</h1>
+    <button class="premiereBtn" onclick="togglePremiere()">Premiere</button>
   </div>
 
-  <script>
-    const audio = document.getElementById("audio");
-    const nowPlaying = document.getElementById("nowPlaying");
-    const errorBox = document.getElementById("error");
+  <div id="err"></div>
 
-    const songs = [
-      {
-        title: "Right Back",
-        url: "https://www.dropbox.com/scl/fi/qa9n3pe7zd0z6tpfzfvwf/right-back.flac.flac?rlkey=znr1abvuvd584osv0p17swxjt&st=efj98trd&raw=1",
-        unlocked: true
-      },
-      {
-        title: "Summer Glow",
-        url: "",
-        unlocked: false
-      },
-      {
-        title: "Blue Skies",
-        url: "",
-        unlocked: false
-      },
-      {
-        title: "Golden Hour",
-        url: "",
-        unlocked: false
-      }
-    ];
+  <!-- GRID -->
+  <div class="grid">
 
-    let current = 0;
+    <div class="card" onclick="playSong(0)">
+      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2F4d891f486bd08c949af60c5005f038f5.1000x1000x1.png">
+      <div class="label">Right Back!</div>
+    </div>
 
-    function playSong(index) {
-      const song = songs[index];
+    <div class="card locked">
+      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fbdab9337903ecb566265438eea2d0638.1000x1000x1.png">
+      <div class="label">NBDY NBDY</div>
+    </div>
 
-      errorBox.textContent = "";
+    <div class="card locked">
+      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2F7049d14c4df71c7ca1ff05da2730f59f.1000x1000x1.png">
+      <div class="label">Dancing on My Own X Happier Than Ever</div>
+    </div>
 
-      if (!song.unlocked) {
-        errorBox.textContent = "This track is still locked 🔒";
-        return;
-      }
+    <div class="card locked">
+      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fd8bcee227347bf02d5925f86e74c6920.1000x1000x1.png">
+      <div class="label">Little Things</div>
+    </div>
 
-      if (!song.url) {
-        errorBox.textContent = "No URL set for this track";
-        return;
-      }
+    <div class="card locked">
+      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Ff9710030489d3ec08b39a961770f102c.1000x1000x1.png">
+      <div class="label">ANTIFRAGILE (Team B)</div>
+    </div>
 
-      current = index;
+    <div class="card locked">
+      <img src="https://t2.genius.com/unsafe/430x430/https%3A%2F%2Fimages.genius.com%2Fe60231c9ec6c6c18b18f8b0f429b36b8.1000x1000x1.png">
+      <div class="label">R.I.P. the idea of you</div>
+    </div>
 
-      audio.src = song.url;
-      audio.load();
+  </div>
+</div>
 
-      const playPromise = audio.play();
+<!-- PLAYER -->
+<div class="banner" id="banner">
+  <div id="now">Nothing playing</div>
+  <audio id="audio" controls></audio>
+  <div class="close" onclick="closePlayer()">Close</div>
+</div>
 
-      if (playPromise !== undefined) {
-        playPromise.catch(err => {
-          errorBox.textContent = "Playback failed (format or link issue)";
-          console.log(err);
-        });
-      }
+<!-- PREMIERE -->
+<div class="premiere" id="premiere">
+  <div>Next Premiere In</div>
+  <div class="timer" id="timer">00:00</div>
+</div>
 
-      nowPlaying.textContent = "Now Playing: " + song.title;
-    }
+<script>
 
-    audio.addEventListener("error", () => {
-      errorBox.textContent = "Audio failed to load (check file format or link)";
-    });
+const audio = document.getElementById("audio");
+const banner = document.getElementById("banner");
+const now = document.getElementById("now");
+const err = document.getElementById("err");
+const premiere = document.getElementById("premiere");
+const timer = document.getElementById("timer");
 
-    audio.addEventListener("ended", () => {
-      let next = current;
+const songs = [
+  {
+    title: "Right Back!",
+    url: "https://www.dropbox.com/scl/fi/qa9n3pe7zd0z6tpfzfvwf/right-back.flac.flac?rlkey=znr1abvuvd584osv0p17swxjt&st=efj98trd&raw=1",
+    unlocked: true
+  }
+];
 
-      do {
-        next = (next + 1) % songs.length;
-      } while (!songs[next].unlocked && next !== current);
+function playSong(i) {
+  const s = songs[i];
+  err.textContent = "";
 
-      if (songs[next].unlocked) {
-        playSong(next);
-      }
-    });
-  </script>
+  if (!s || !s.unlocked) {
+    err.textContent = "🔒 Not released yet";
+    return;
+  }
+
+  audio.src = s.url;
+  audio.load();
+  audio.play().catch(() => err.textContent = "Playback failed");
+
+  now.textContent = "Now Playing: " + s.title;
+  banner.classList.add("show");
+}
+
+function closePlayer() {
+  banner.classList.remove("show");
+  audio.pause();
+}
+
+/* PREMIERE SYSTEM (00:00 for now) */
+let showPremiere = false;
+
+function togglePremiere() {
+  showPremiere = !showPremiere;
+  premiere.classList.toggle("show");
+}
+
+/* TIMER (currently 00:00 placeholder) */
+setInterval(() => {
+  timer.textContent = "00:00";
+}, 1000);
+
+</script>
 
 </body>
 </html>
