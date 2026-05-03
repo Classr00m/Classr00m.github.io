@@ -1,15 +1,25 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Karlee Girl Player</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       background: linear-gradient(to bottom right, #dbeafe, #fef9c3, white);
       text-align: center;
       padding: 40px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    #nowPlaying {
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #444;
     }
 
     .song {
@@ -24,6 +34,12 @@
 
     .song:hover {
       transform: scale(1.05);
+      background: rgba(255,255,255,0.9);
+    }
+
+    .locked {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .player {
@@ -31,42 +47,77 @@
     }
   </style>
 </head>
+
 <body>
 
   <h1>Karlee Girl 🎧</h1>
+  <div id="nowPlaying">Nothing playing</div>
 
+  <!-- SONG LIST -->
   <div class="song" onclick="playSong(0)">Right Back</div>
-  <div class="song" onclick="playSong(1)">Summer Glow</div>
-  <div class="song" onclick="playSong(2)">Blue Skies</div>
-  <div class="song" onclick="playSong(3)">Golden Hour</div>
+  <div class="song locked">Summer Glow (🔒 Soon)</div>
+  <div class="song locked">Blue Skies (🔒 Soon)</div>
+  <div class="song locked">Golden Hour (🔒 Soon)</div>
 
   <div class="player">
     <audio id="audio" controls></audio>
   </div>
 
   <script>
+    // 🔥 Replace with your REAL Google Drive direct links
     const songs = [
-      "songs/right-back.flac",
-      "songs/summer-glow.flac",
-      "songs/blue-skies.flac",
-      "songs/golden-hour.flac"
+      {
+        title: "Right Back",
+        url: "https://drive.google.com/uc?export=download&id=1J6p-xS4_qwuVsesVdQ9kIQZgcwXUQhp-",
+        unlocked: true
+      },
+      {
+        title: "Summer Glow",
+        url: "",
+        unlocked: false
+      },
+      {
+        title: "Blue Skies",
+        url: "",
+        unlocked: false
+      },
+      {
+        title: "Golden Hour",
+        url: "",
+        unlocked: false
+      }
     ];
 
     let current = 0;
     const audio = document.getElementById("audio");
+    const nowPlaying = document.getElementById("nowPlaying");
 
     function playSong(index) {
+      const song = songs[index];
+
+      if (!song.unlocked) {
+        alert("This track isn't released yet 👀");
+        return;
+      }
+
       current = index;
-      audio.src = songs[index];
+      audio.src = song.url;
       audio.play();
+
+      nowPlaying.textContent = "Now Playing: " + song.title;
     }
 
+    // Auto play next track (only unlocked ones)
     audio.addEventListener("ended", () => {
-      current = (current + 1) % songs.length;
-      playSong(current);
+      let next = current;
+
+      do {
+        next = (next + 1) % songs.length;
+      } while (!songs[next].unlocked && next !== current);
+
+      playSong(next);
     });
   </script>
 
 </body>
 </html>
-```
